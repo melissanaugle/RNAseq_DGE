@@ -1,0 +1,33 @@
+---
+title: "DIAMOND"
+author: "Melissa Naugle"
+date: "10/22/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Annotation using DIAMOND against UniProt/Swiss-Prot database
+
+http://www.diamondsearch.org/index.php
+
+By default, there are 12 pre-configured fields in the output file: qseqid, sseqid, pident, length, mismatch, gapopen, qstart, qend, sstart, send, evalue, bitscore.
+
+#blastx = Align translated DNA query sequences against a protein reference database
+#-p = number of CPU threads
+#-k = maximum number of target sequences per query to report alignments for (default=25) 
+#-e = maximum expected value to report an alignment (default=0.001)
+#-d = path to DIAMOND database file
+#-q = path to query input file in FASTA format
+#-o = path to the output file
+#-f = output file format (specify "6" and then include: qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qtitle)
+
+```{bash}
+diamond blastx -p 2 -k 1 -e 0.00001 -d /data/references/diamond/swissprot.04262020.dmnd -q /data/corals/QCdata_full/corals_DE_seqs_sorted.fasta -o /data/corals/QCdata_full/corals.dmnd.uniprot_sprot.txt -f 6 qseqid sseqid stitle pident length mismatch gapopen qstart qend sstart send evalue bitscore qtitle
+```
+
+
+
+

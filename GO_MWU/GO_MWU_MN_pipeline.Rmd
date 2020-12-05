@@ -1,0 +1,156 @@
+---
+title: "GO_MWU_MN_pipeline"
+author: "Melissa Naugle"
+date: "11/20/2020"
+output: html_document
+---
+
+
+```{r setup}
+setwd("/Users/Melissa/Desktop/GitHub/corals_RNAseq_DGE/GO_MWU/")
+rm( list = ls())
+graphics.off()
+library(ggplot2)
+library(ggpubr)
+library(plyr)
+library(dplyr)
+library(reshape2)
+library(ape)
+```
+
+#First to input into PANTHER 
+
+```{r diamondannotations}
+#read in diamond output file
+dat <- read.csv("../data/corals.dmnd.uniprot_sprot.txt", sep = '\t', header = F)
+head(dat)
+
+#To get into format to paste into PANTHER
+#copy to input into panther (for all DGEs)
+uniprotIDs <- data.frame(dat$V2)
+paste(as.character(dat$V2), collapse=", ")
+
+#Change column names to those specified in DIAMOND code
+names(dat) <- c("qseqid", "sseqid", "stitle" ,"pident", "length", 
+                "mismatch", "gapopen", "qstart", "qend", "sstart", 
+                "send", "evalue", "bitscore", "qtitle")
+head(dat)
+#data file with DIAMOND output 
+
+
+```
+
+
+##To get started
+#From https://github.com/z0on/GO_MWU/blob/master/README_GO_MWU.txt
+
+1. Put all this into the same directory:
+	- scripts: GO_MWU.R, gomwu_a.pl, gomwu_b.pl, gomwu.functions.R
+	#downloaded from: https://github.com/z0on/GO_MWU
+	
+	- GO hierarchy file 
+		(version 1.0, http://www.geneontology.org/GO.downloads.ontology.shtml)
+		#downloaded from above website (go.obo)
+		
+	- table of GO annotations for your sequences: two-column (gene id - GO terms), 
+		tab-delimited, one line per gene, multiple GO terms separated by semicolon. 
+		If you have multiple lines per gene, use nrify_GOtable.pl to merge them.
+		#created in this script
+		
+	- table of measure of interest for your sequences: two columns of comma-separated 
+		values: gene id, continuous measure of significance (such as fold-change or 
+		-log(p-value)). To perform standard GO enrichment analysis based on Fisher's 
+		exact test, use binary measure (1 or 0, i.e., either significant or not).
+		#created in this script, use ref transcriptome and DE file 
+		#used ALL DGES, maybe just try those between certain comparisons?
+		
+
+2. Make sure you have perl and R. The R part requires package "ape", which 
+you might need to install prior to running this method.
+
+3. Open GO_MWU.R script; edit the input file names, mark and execute bits of code
+separated by blank lines one by one. Follow instructions given as comments in the script.
+
+4. Drag corner of the plot to rescale and match text and tree. After this, to
+achieve better "word map" effect, rerun gomwuPlot with modified "txtsize" parameter.
+
+5. Save the plot as pdf file.
+
+
+#Create table of GO annotations
+
+table of GO annotations for your sequences: two-column (gene id - GO terms), 
+		tab-delimited, one line per gene, multiple GO terms separated by semicolon. 
+		If you have multiple lines per gene, use nrify_GOtable.pl to merge them.
+		
+first input ref transcriptome into eggnog mapper 
+ref: Hyacinthus_genes_edited_09012020_nocarr_noBOM.fasta
+output from eggnogmapper: query_seqs.fa.emapper.annotations
+
+
+```{unix GO_annotation_table}
+
+#extracts columns 1 and 7 from file 
+cut -f 1,7 query_seqs.fa.emapper.annotations > eggnog_GO_annotations
+#creates table of GO annotations for all the sequences
+#13761 lines in file
+
+#replace , with ;
+sed 's/,/;/g' eggnog_GO_annotations > eggnog_GO_annotations_semicolon
+
+#some contigs dont have GO terms with them
+#label these 'unknown'
+awk -F'[[:space:]]' '$1 && !$2{ $2="unknown" }1' eggnog_GO_annotations_semicolon > eggnog_GO_annotations_semicolon_unknowns
+
+#this can be used to remove them (but not necessary to do this)
+#awk  '$2!=""' eggnog_GO_annotations_semicolon >  eggnog_GO_annotations_semicolon_onlyGOs
+
+
+#looks good I think!
+```
+
+
+#Create table of measure of interest for your sequences
+
+
+```{r table_sequences}
+
+#read in file with all DGE contigs (maybe based on p = 0.001???)
+DGE <- read.delim("../data/corals_DGE_contigs.txt", header = F)
+#read in file with all contigs from transciptome
+allcontigs <- read.delim("../data/Hyacinthus_genes_allcontigs.txt", header = F)
+
+head(DGE)
+head(allcontigs)
+
+#4806 contigs DGE (p = 0.001)
+#6913 if p =0.05
+nrow(DGE)
+#28437 contigs all
+nrow(allcontigs)
+
+#if DGE then signif
+DGE$signif <- '1'
+
+head(DGE)
+head(allcontigs)
+
+contigs_and_signif <- merge(DGE, allcontigs, all = T)
+head(contigs_and_signif)
+#28642 
+nrow(contigs_and_signif)
+
+contigs_and_signif[is.na(contigs_and_signif)] <- 0
+
+head(contigs_and_signif)
+write.table(contigs_and_signif, "contigs_signif_file_GOMWU_allDGES.txt", row.names = F)
+#makes table 
+
+```
+
+
+
+
+
+
+
