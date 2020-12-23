@@ -1,0 +1,24 @@
+---
+title: "DGE_GLM"
+author: "Melissa Naugle"
+date: "12/21/2020"
+output: html_document
+---
+
+```{r setup}
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+#BiocManager::install("edgeR")
+#install.packages("statmod")
+library("edgeR")
+library("statmod")
+
+#Import gene count data and view the first few rows
+#had to add 'gene' to first header row on original txt file to prevent weird error
+countsTable <- read.table(file="../../RSEM.isoform.counts.matrix.txt", row.names="gene", sep="\t", header=TRUE)
+head(countsTable)
+
+
+
+
+```

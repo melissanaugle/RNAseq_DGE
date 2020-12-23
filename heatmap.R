@@ -1,5 +1,5 @@
 
-setwd("/Users/Melissa/Desktop/GitHub/corals_RNAseq_DGE/")
+setwd("/Users/Melissa/Desktop/GitHub/RNAseq_DGE/")
 
 library(tidyverse) 
 library(reshape2)  
@@ -9,15 +9,14 @@ library(gplots)
 library(RColorBrewer)
 
 
-#now using p = 0.05 data 
+# using p = 0.05 data 
 data <- read.csv("data/diffExpr.P0.05_C2.matrix.log2.centered.dat.csv", header=TRUE)
 head(data)
+nrow(data)
 
 #Check for row duplicates
-
 data[duplicated(data) | duplicated(data, fromLast=TRUE), ]
 duplicated(data)
-
 
 #Re-organize data 
 
@@ -30,7 +29,7 @@ nrow(dat)
 #cluster rows
 row.order <- hclust(dist(dat))$order 
 #cluster columns by sample order 
-col.order <-c(1,2,3,4,9,10,11,12,16,17,18,5,6,7,8,13,14,15,19,20,21,22) 
+col.order <-c(1,2,3,4,9,10,11,12,17,16,18,5,7,6,8,13,14,15,20,22,19,21) 
 #re-order matrix according to clustering
 dat_clust <- dat[row.order, col.order] # re-order matrix according to clustering
 #reshape into data frame
@@ -63,5 +62,4 @@ g<-ggplot(df_molten_dat, aes(x=treatment,y=Trinity_ID)) +
 
 g
 
-#ggsave("Heatmap1.png",plot=g)
-
+ggsave("Heatmap1_newcluster.png",plot=g)

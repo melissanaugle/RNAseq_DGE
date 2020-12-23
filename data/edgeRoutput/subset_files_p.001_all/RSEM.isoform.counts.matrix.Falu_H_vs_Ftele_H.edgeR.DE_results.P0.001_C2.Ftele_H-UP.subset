@@ -1,0 +1,2 @@
+sampleA	sampleB	logFC	logCPM	PValue	FDR	CoPt_E_rep1	CoPt_H_rep1	CoPt_E_rep2	CoPt_H_rep2	CoPt_E_rep3	CoPt_H_rep3	CoPt_E_rep4	CoPt_H_rep4	Falu_E_rep1	Falu_H_rep1	Falu_E_rep3	Falu_E_rep4	Falu_H_rep4	Falu_E_rep6	Falu_H_rep6	Ftele_H_rep1	Ftele_E_rep3	Ftele_H_rep3	Ftele_E_rep5	Ftele_H_rep5	Ftele_E_rep6	Ftele_H_rep6
+aten_0.1.m1.14157.m1	Falu_H	Ftele_H	-3.77865478597159	4.86497170766919	6.02351114506049e-10	2.78426763495179e-06	5.851	129.433	6.246	88.715	7.836	2.721	5.796	35.530	8.979	2.183	4.675	8.150	1.137	6.758	2.413	25.956	4.622	18.424	4.091	24.776	3.556	37.020
