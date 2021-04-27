@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r setup}
-setwd("/Users/Melissa/Desktop/GitHub/corals_RNAseq_DGE/GO_MWU/")
+setwd("/Users/Melissa/Desktop/GitHub/RNAseq_DGE/GO_MWU/")
 rm( list = ls())
 graphics.off()
 library(ggplot2)
@@ -19,6 +19,8 @@ library(ape)
 ```
 
 #First to input into PANTHER 
+not related to eggnog and go_mwu 
+just a preliminary looksee :)
 
 ```{r diamondannotations}
 #read in diamond output file
@@ -61,8 +63,9 @@ head(dat)
 		values: gene id, continuous measure of significance (such as fold-change or 
 		-log(p-value)). To perform standard GO enrichment analysis based on Fisher's 
 		exact test, use binary measure (1 or 0, i.e., either significant or not).
-		#created in this script, use ref transcriptome and DE file 
+		#use ref transcriptome and DE file 
 		#used ALL DGES, maybe just try those between certain comparisons?
+		#made in r script titled 'create_contig_signif_file_GOMWU.R' and gives file called contigs_signif_file_GOMWU.txt
 		
 
 2. Make sure you have perl and R. The R part requires package "ape", which 
@@ -87,47 +90,128 @@ first input ref transcriptome into eggnog mapper
 ref: Hyacinthus_genes_edited_09012020_nocarr_noBOM.fasta
 output from eggnogmapper: query_seqs.fa.emapper.annotations
 
+```{r g}
+read.table("query_seqs.fa.emapper.annotations", fill = T)
+
+
+```
+
 
 ```{unix GO_annotation_table}
+
 
 #extracts columns 1 and 7 from file 
 cut -f 1,7 query_seqs.fa.emapper.annotations > eggnog_GO_annotations
 #creates table of GO annotations for all the sequences
-#13761 lines in file
+#13761 lines in file (why not 28437 like in ref fasta? not sure)
 
 #replace , with ;
 sed 's/,/;/g' eggnog_GO_annotations > eggnog_GO_annotations_semicolon
 
 #some contigs dont have GO terms with them
 #label these 'unknown'
-awk -F'[[:space:]]' '$1 && !$2{ $2="unknown" }1' eggnog_GO_annotations_semicolon > eggnog_GO_annotations_semicolon_unknowns
+awk -F'\t' '$1 && !$2{ $2="\tunknown" }1' eggnog_GO_annotations_semicolon > eggnog_GO_annotations_semicolon_unknowns
+
+#remove spaces
+tr -d ' ' < eggnog_GO_annotations_semicolon_unknowns > eggnog_GO_annotations_semicolon_unknowns_nospace
 
 #this can be used to remove them (but not necessary to do this)
 #awk  '$2!=""' eggnog_GO_annotations_semicolon >  eggnog_GO_annotations_semicolon_onlyGOs
 
 
 #looks good I think!
+#can delete eggnog_GO_annotations and eggnog_GO_annotations_semicolon
 ```
 
-
+##Preferred method:
 #Create table of measure of interest for your sequences
-
+To make signif file with fold change
 
 ```{r table_sequences}
 
-#read in file with all DGE contigs (maybe based on p = 0.001???)
-DGE <- read.delim("../data/corals_DGE_contigs.txt", header = F)
-#read in file with all contigs from transciptome
-allcontigs <- read.delim("../data/Hyacinthus_genes_allcontigs.txt", header = F)
-
+#read in file with DGE contigs of interest 
+DGE <- read.csv("", header = F, skip = 1)
+DGE <- as.data.frame(DGE)
+DGE <- DGE %>%
+  select(1,2)
 head(DGE)
+nrow(DGE)
+
+#read in file with all contigs from transciptome
+allcontigs <- read.delim("Hyacinthus_genes_allcontigs.txt", header = F)
+nrow(allcontigs)
 head(allcontigs)
 
-#4806 contigs DGE (p = 0.001)
-#6913 if p =0.05
+contigs_and_signif <- merge(DGE, allcontigs, all = T)
+head(contigs_and_signif)
+#28642 
+nrow(contigs_and_signif)
+
+contigs_and_signif[is.na(contigs_and_signif)] <- 0
+
+head(contigs_and_signif)
+#write.csv(contigs_and_signif, "contigs_signif_file_GOMWU_DEaluheatvcontrol_foldchange.csv", row.names = F, quote = F)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Create table of measure of interest for your sequences
+To make signif file with log P values
+
+```{r table_sequences}
+
+#read in file with DGE contigs of interest 
+DGE <- read.csv("../data/DEcontigs_edger_glm/tagsTblANOVA.one.teleheatvcontrolFDR0.05.csv", header = T, skip = 1)
+DGE <- as.data.frame(DGE)
+DGE <- DGE %>%
+  select(1,5)
+head(DGE)
 nrow(DGE)
-#28437 contigs all
+DGE$V5 <- log10(DGE$V5) * -1
+
+#read in file with all contigs from transciptome
+allcontigs <- read.delim("Hyacinthus_genes_allcontigs.txt", header = F)
 nrow(allcontigs)
+head(allcontigs)
+
+contigs_and_signif <- merge(DGE, allcontigs, all = T)
+head(contigs_and_signif)
+#28642 
+nrow(contigs_and_signif)
+
+contigs_and_signif[is.na(contigs_and_signif)] <- 0
+
+head(contigs_and_signif)
+#write.csv(contigs_and_signif, "contigs_signif_file_GOMWU_DEteleheatvcontrol_logpvalues.csv", row.names = F, quote = F)
+
+```
+
+#To make signif file with just 1s and 0s 
+
+```{r makesigniffile}
+
+#read in file with DGE contigs of interest 
+DGE <- read.csv("../data/DEcontigs_edger_glm/tagsTblANOVA.one.teleheatvcontrolFDR0.05.csv", header = F, skip = 1)[,1]
+DGE <- as.data.frame(DGE)
+colnames(DGE) <- "V1"
+head(DGE)
+nrow(DGE)
+
+#read in file with all contigs from transciptome
+allcontigs <- read.delim("Hyacinthus_genes_allcontigs.txt", header = F)
+nrow(allcontigs)
+head(allcontigs)
 
 #if DGE then signif
 DGE$signif <- '1'
@@ -143,9 +227,7 @@ nrow(contigs_and_signif)
 contigs_and_signif[is.na(contigs_and_signif)] <- 0
 
 head(contigs_and_signif)
-write.table(contigs_and_signif, "contigs_signif_file_GOMWU_allDGES.txt", row.names = F)
-#makes table 
-
+#write.csv(contigs_and_signif, "contigs_signif_file_GOMWU_DEteleheatvcontrol.csv", row.names = F, quote = F)
 ```
 
 

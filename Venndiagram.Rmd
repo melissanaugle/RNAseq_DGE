@@ -1,0 +1,159 @@
+---
+title: "Venndiagram"
+author: "Melissa Naugle"
+date: "3/25/2021"
+output: html_document
+---
+
+```{r setup}
+setwd(dir = "~/Desktop/GitHub/RNAseq_DGE/")
+rm( list = ls())
+graphics.off()
+library(tidyverse) 
+library(reshape2) 
+library(ggthemes) 
+library(VennDiagram)
+library(dplyr)
+```
+
+Data options:
+EdgeR classic:
+p < 0.05 c2
+p < 0.001 c2
+GLM edgeR
+p < 0.05 fc2
+p < 0.001 fc2
+
+Choosing: GLM edgeR FDR < 0.05
+
+```{r readdata}
+#Read in data files with DEGs between control and each  treatment, selecting only the contig name (ContigID) column
+#only needed ones
+
+CoPtE_CoPtH <-read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.cocoheatvcontrol_FDR0.05.csv", sep = ",")
+CoPtE_CoPtH <- setNames(cbind(rownames(CoPtE_CoPtH), CoPtE_CoPtH, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH)))
+head(CoPtE_CoPtH)
+CoPtE_CoPtH <- select(CoPtE_CoPtH, "ContigID")
+
+TeleE_TeleH <-read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.teleheatvcontrolFDR0.05.csv", sep = ",")
+TeleE_TeleH <- setNames(cbind(rownames(TeleE_TeleH), TeleE_TeleH, row.names = NULL), c("ContigID", colnames(TeleE_TeleH)))
+head(TeleE_TeleH)
+TeleE_TeleH <- select(TeleE_TeleH, "ContigID")
+
+AluE_AluH <-read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.aluheatvcontrolFDR0.05.csv", sep = ",")
+AluE_AluH <- setNames(cbind(rownames(AluE_AluH), AluE_AluH, row.names = NULL), c("ContigID", colnames(AluE_AluH)))
+head(AluE_AluH)
+AluE_AluH <- select(AluE_AluH, "ContigID")
+
+```
+
+
+
+```{r makevenn}
+#Use join function to find contig names shared between comparisons. 
+#Head(joinX) will print your list of shared genes.
+
+joinCoPtEHvAluEH <- intersect(CoPtE_CoPtH, AluE_AluH, by="ContigID")
+joinCoPtEHvTeleEH <- intersect(CoPtE_CoPtH,TeleE_TeleH, by="ContigID")
+joinAluEHvTeleEH <- intersect(AluE_AluH,TeleE_TeleH, by="ContigID")
+join_all_2 <- intersect(joinCoPtEHvAluEH,joinCoPtEHvTeleEH,joinAluEHvTeleEH)
+
+#Plot Venn diagram with numbers generated above
+
+#Plot Venn diagram for genes, specifying number of genes in each comparison 
+#(area1 = CoPtEvH, area2 = AluEvH, area 3 = TeleEvH, n12 = CoPtAlu, n13 = CtTele, n23 = AluTele, n123 = joinall)
+
+#change these nums 
+grid.newpage()
+venn.plot <- draw.triple.venn( 
+  area1 = nrow(CoPtE_CoPtH), area2 = nrow(AluE_AluH), area3 = nrow(TeleE_TeleH), n12 = nrow(joinCoPtEHvAluEH), n13 = nrow(joinCoPtEHvTeleEH), n23 = nrow(joinAluEHvTeleEH), n123 = nrow(join_all_2), 
+  category = c("Coconut Point", "Faga'alu", "Faga'tele"), fill = c("skyblue", "mediumorchid", "salmon"), lty = "blank", cex = 3);
+
+#Save the  Venn diagram
+
+png("Figures/venn_allsites_FDR0.05_03252021.png")
+grid.draw(venn.plot)
+dev.off()
+
+```
+
+```{r writedgelists}
+specific_to_tele <- setdiff(TeleE_TeleH, AluE_AluH)
+specific_to_tele <- setdiff(specific_to_tele, CoPtE_CoPtH)
+
+specific_to_coco <- setdiff(CoPtE_CoPtH, AluE_AluH)
+specific_to_coco <- setdiff(specific_to_coco, TeleE_TeleH)
+
+specific_to_alu <- setdiff(AluE_AluH, CoPtE_CoPtH)
+specific_to_alu <- setdiff(specific_to_alu, TeleE_TeleH)
+
+write.csv(specific_to_tele, "data/DEcontigs_edger_glm/DE_specific_to_tele_FDR0.05.csv", row.names = F)
+```
+
+
+
+```{r venntocheck}
+CoPtE_CoPtH_0.5_c2 <-read.csv("data/RSEM.isoform.counts.matrix.CoPt_E_vs_CoPt_H.edgeR.DE_results.P0.05_C2.DE.subset", sep = "\t")
+CoPtE_CoPtH_0.5_c2 <- setNames(cbind(rownames(CoPtE_CoPtH_0.5_c2), CoPtE_CoPtH_0.5_c2, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH_0.5_c2)))
+head(CoPtE_CoPtH_0.5_c2)
+CoPtE_CoPtH_0.5_c2 <- select(CoPtE_CoPtH_0.5_c2, "ContigID")
+
+CoPtE_CoPtH_0.001_c2 <- read.csv("data/RSEM.isoform.counts.matrix.CoPt_E_vs_CoPt_H.edgeR.DE_results.P0.001_C2.DE.subset", sep = "\t")
+CoPtE_CoPtH_0.001_c2 <- setNames(cbind(rownames(CoPtE_CoPtH_0.001_c2), CoPtE_CoPtH_0.001_c2, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH_0.001_c2)))
+head(CoPtE_CoPtH_0.001_c2)
+CoPtE_CoPtH_0.001_c2 <- select(CoPtE_CoPtH_0.001_c2, "ContigID")
+
+CoPtE_CoPtH_0.05_fc2_glm <- read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.cocoheatvcontrol_p0.05fc2.csv")
+CoPtE_CoPtH_0.05_fc2_glm <- setNames(cbind(rownames(CoPtE_CoPtH_0.05_fc2_glm), CoPtE_CoPtH_0.05_fc2_glm, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH_0.05_fc2_glm)))
+head(CoPtE_CoPtH_0.05_fc2_glm)
+CoPtE_CoPtH_0.05_fc2_glm <- select(CoPtE_CoPtH_0.05_fc2_glm, "ContigID")
+
+CoPtE_CoPtH_0.001_fc2_glm <- read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.cocoheatvcontrol_p0.001fc2.csv")
+CoPtE_CoPtH_0.001_fc2_glm <- setNames(cbind(rownames(CoPtE_CoPtH_0.001_fc2_glm), CoPtE_CoPtH_0.001_fc2_glm, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH_0.001_fc2_glm)))
+head(CoPtE_CoPtH_0.001_fc2_glm)
+CoPtE_CoPtH_0.001_fc2_glm <- select(CoPtE_CoPtH_0.001_fc2_glm, "ContigID")
+
+CoPtE_CoPtH_FDR0.05_glm <- read.csv("data/DEcontigs_edger_glm/tagsTblANOVA.one.allheatvcontrol_FDR0.05.csv")
+CoPtE_CoPtH_FDR0.05_glm <- setNames(cbind(rownames(CoPtE_CoPtH_FDR0.05_glm), CoPtE_CoPtH_FDR0.05_glm, row.names = NULL), c("ContigID", colnames(CoPtE_CoPtH_FDR0.05_glm)))
+head(CoPtE_CoPtH_FDR0.05_glm)
+CoPtE_CoPtH_FDR0.05_glm <- select(CoPtE_CoPtH_FDR0.05_glm, "ContigID")
+
+
+
+
+
+joinClassicvGLM_0.05 <- intersect(CoPtE_CoPtH_0.5_c2, CoPtE_CoPtH_0.05_fc2_glm, by="ContigID")
+joinClassicvGLM_0.001 <- intersect(CoPtE_CoPtH_0.001_c2, CoPtE_CoPtH_0.001_fc2_glm, by="ContigID")
+joinClassic0.05v0.001 <- intersect(CoPtE_CoPtH_0.5_c2, CoPtE_CoPtH_0.001_c2, by="ContigID")
+joinGLM0.05v0.001 <- intersect(CoPtE_CoPtH_0.05_fc2_glm, CoPtE_CoPtH_0.001_fc2_glm, by="ContigID")
+joinFDRvGLM0.05 <- intersect(CoPtE_CoPtH_0.05_fc2_glm, CoPtE_CoPtH_FDR0.05_glm, by="ContigID")
+joinFDRvClassic0.05 <- intersect(CoPtE_CoPtH_0.05_fc2_glm, CoPtE_CoPtH_0.5_c2, by="ContigID")
+
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(CoPtE_CoPtH_0.5_c2), area2 = nrow(CoPtE_CoPtH_0.05_fc2_glm), cross.area = nrow(joinClassicvGLM_0.05), category = c("Classic, p < 0.05, fc > 4", "GLM, p < 0.05, fc > 2"))
+#GLM appears  to be more strict, many shared genes
+
+
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(CoPtE_CoPtH_0.001_c2), area2 = nrow(CoPtE_CoPtH_0.001_fc2_glm), cross.area = nrow(joinClassicvGLM_0.001), category = c("Classic, p < 0.001, fc > 4", "GLM, p < 0.001, fc > 2"))
+#GLM appears  to be more strict, many shared genes
+
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(CoPtE_CoPtH_0.5_c2), area2 = nrow(CoPtE_CoPtH_0.001_c2), cross.area = nrow(joinClassic0.05v0.001), category = c("Classic, p < 0.05, fc > 4", "Classic, p < 0.001"))
+#looks good, total overlap 
+
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(CoPtE_CoPtH_FDR0.05_glm), area2 = nrow(CoPtE_CoPtH_0.05_fc2_glm), cross.area = nrow(joinFDRvGLM0.05), category = c("GLM, FDR < 0.05", "GLM, p < 0.05, fc > 2"))
+#glm with fold change cutoff much more strict
+
+
+grid.newpage()
+draw.pairwise.venn(area1 = nrow(CoPtE_CoPtH_FDR0.05_glm), area2 = nrow(CoPtE_CoPtH_0.5_c2), cross.area = nrow(joinFDRvClassic0.05), category = c("GLM, FDR < 0.05", "Classic, p < 0.05, c > 2"))
+#many diffs
+
+```
+
+
+
+
+

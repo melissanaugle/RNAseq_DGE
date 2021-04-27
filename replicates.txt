@@ -1,22 +1,23 @@
-CoPt_E    CoPt_E_rep1
-CoPt_E    CoPt_E_rep2
-CoPt_E    CoPt_E_rep3
-CoPt_E    CoPt_E_rep4
-CoPt_H    CoPt_H_rep1
-CoPt_H    CoPt_H_rep2
-CoPt_H    CoPt_H_rep3
-CoPt_H    CoPt_H_rep4
-Falu_E    Falu_E_rep1
-Falu_E    Falu_E_rep3
-Falu_E    Falu_E_rep4
-Falu_E    Falu_E_rep6
-Falu_H    Falu_H_rep1
-Falu_H    Falu_H_rep4
-Falu_H    Falu_H_rep6
-Ftele_E   Ftele_E_rep3
-Ftele_E   Ftele_E_rep5
-Ftele_E   Ftele_E_rep6
-Ftele_H   Ftele_H_rep1
-Ftele_H   Ftele_H_rep3
-Ftele_H   Ftele_H_rep5
-Ftele_H   Ftele_H_rep6
+site_treatment	sample	site	treatment	genotype
+CoPt_E	CoPt_E_rep1	CoconutPoint	Control_28	Rep1_Coco
+CoPt_H	CoPt_H_rep1	CoconutPoint	Heat_35	Rep1_Coco
+CoPt_E	CoPt_E_rep2	CoconutPoint	Control_28	Rep2_Coco
+CoPt_H	CoPt_H_rep2	CoconutPoint	Heat_35	Rep2_Coco
+CoPt_E	CoPt_E_rep3	CoconutPoint	Control_28	Rep3_Coco
+CoPt_H	CoPt_H_rep3	CoconutPoint	Heat_35	Rep3_Coco
+CoPt_E	CoPt_E_rep4	CoconutPoint	Control_28	Rep4_Coco
+CoPt_H	CoPt_H_rep4	CoconutPoint	Heat_35	Rep4_Coco
+Falu_E	Falu_E_rep1	Fagaalu	Control_28	Rep1_Alu
+Falu_H	Falu_H_rep1	Fagaalu	Heat_35	Rep1_Alu
+Falu_E	Falu_E_rep3	Fagaalu	Control_28	Rep3_Alu
+Falu_E	Falu_E_rep4	Fagaalu	Control_28	Rep4_Alu
+Falu_H	Falu_H_rep4	Fagaalu	Heat_35	Rep4_Alu
+Falu_E	Falu_E_rep6	Fagaalu	Control_28	Rep6_Alu
+Falu_H	Falu_H_rep6	Fagaalu	Heat_35	Rep6_Alu
+Ftele_H	Ftele_H_rep1	Fagatele	Heat_35	Rep1_Tele
+Ftele_E	Ftele_E_rep3	Fagatele	Control_28	Rep3_Tele
+Ftele_H	Ftele_H_rep3	Fagatele	Heat_35	Rep3_Tele
+Ftele_E	Ftele_E_rep5	Fagatele	Control_28	Rep5_Tele
+Ftele_H	Ftele_H_rep5	Fagatele	Heat_35	Rep5_Tele
+Ftele_E	Ftele_E_rep6	Fagatele	Control_28	Rep6_Tele
+Ftele_H	Ftele_H_rep6	Fagatele	Heat_35	Rep6_Tele

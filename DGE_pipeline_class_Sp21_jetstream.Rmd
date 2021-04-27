@@ -1,0 +1,112 @@
+---
+title: "DGE_pipelineclass_sp21_jetstream"
+author: "Melissa Naugle"
+date: "4/21/2021"
+output: html_document
+---
+
+
+# Check basenames before trimming data
+
+```{bash check_basenames}
+for infile in *_1.fq.gz
+do
+    base=$(basename ${infile} _1.fq.gz)
+    echo ${base}
+done >> basenames_output.txt 2>&1
+```
+
+# Trim data 
+
+Should do this with screen 
+
+```{bash trim}
+for infile in *_1.fq.gz
+do
+   base=$(basename ${infile} _1.fq.gz)
+   java -jar /opt/miniconda3/share/trimmomatic/trimmomatic.jar PE ${infile} ${base}_2.fq.gz ${base}_1.trimmed.fq.gz ${base}_1un.trimmed.fq.gz ${base}_2.trimmed.fq.gz ${base}_2un.trimmed.fq.gz ILLUMINACLIP:combined_adapters.fa:2:30:10 SLIDINGWINDOW:4:5 LEADING:5 TRAILING:5 MINLEN:25 >> output.txt
+done >> trimoutput.txt 2>&1
+
+```
+
+# Run FastQC
+
+```{bash fastqc}
+
+fastqc *.fq.gz
+```
+
+# Mapping 
+To Barshis 2013 ref transcriptome: 33496_Ahyacinthus_CoralContigs.fasta
+
+```{bash mapping}
+nohup perl /opt/trinityrnaseq/util/align_and_estimate_abundance.pl --transcripts 33496_Ahyacinthus_CoralContigs.fasta --seqType fq --samples_file coral_samples.txt --est_method RSEM --aln_method bowtie2 --prep_reference --output_dir RSEM_mapping > RSEM_out 2>&1 &
+```
+
+
+# Counts Matrix
+```{bash counts}
+nohup perl /opt/trinityrnaseq/util/abundance_estimates_to_matrix.pl --est_method RSEM  --gene_trans_map none --name_sample_by_basedir CoPt_E_rep1/RSEM.genes.results CoPt_H_rep1/RSEM.genes.results CoPt_E_rep2/RSEM.genes.results CoPt_H_rep2/RSEM.genes.results CoPt_E_rep3/RSEM.genes.results CoPt_H_rep3/RSEM.genes.results CoPt_E_rep4/RSEM.genes.results CoPt_H_rep4/RSEM.genes.results Falu_E_rep1/RSEM.genes.results Falu_H_rep1/RSEM.genes.results Falu_E_rep4/RSEM.genes.results Falu_H_rep4/RSEM.genes.results Falu_E_rep6/RSEM.genes.results Falu_H_rep6/RSEM.genes.results Ftele_E_rep3/RSEM.genes.results Ftele_H_rep3/RSEM.genes.results Ftele_E_rep5/RSEM.genes.results Ftele_H_rep5/RSEM.genes.results Ftele_E_rep6/RSEM.genes.results Ftele_H_rep6/RSEM.genes.results > RSEMae_out 2>&1 &
+```
+
+
+# Compare reps
+
+```{bash comparereps}
+#cor matrix
+perl /opt/trinityrnaseq/Analysis/DifferentialExpression/PtR --matrix RSEM.isoform.counts.matrix --min_rowSums 10 -s coral_samples.txt --log2 --CPM --sample_cor_matrix
+
+#tried this but no fast cluster package
+#copy cor matrix to treebeard and samples txt file
+scp naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full/RSEM.isoform.counts.matrix /home/naug7321/RSEM.isoform.counts.matrix
+scp naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full/coral_samples.txt home/naug7321/coral_samples.txt
+
+#now try again - on treebeard, works!
+perl /opt/trinityrnaseq-Trinity-v2.4.0/Analysis/DifferentialExpression/PtR --matrix RSEM.isoform.counts.matrix --min_rowSums 10 -s coral_samples.txt --log2 --CPM --sample_cor_matrix
+```
+
+
+#PCA
+```{bash pca}
+#also doesn't work on khaleesi, now try treebeard 
+perl /opt/trinityrnaseq-Trinity-v2.4.0/Analysis/DifferentialExpression/PtR --matrix RSEM.isoform.counts.matrix -s coral_samples.txt --min_rowSums 10 --log2 --CPM --center_rows --prin_comp 3 
+```
+
+```{bash dge}
+#copy these output files to khaleesi 
+scp naug7321@treebeard.csumb.edu:/home/naug7321/RSEM.isoform.counts.matrix.minRow10.CPM.log2* /data/corals/QCdata_full
+
+# Run DGE
+perl /opt/trinityrnaseq/Analysis/DifferentialExpression/run_DE_analysis.pl --matrix RSEM.isoform.counts.matrix --method edgeR
+#error - lack of replicates
+
+#need to create replicates txt file
+#replicates.txt file shows relationship between treatment and replicates
+scp /Users/Melissa/Desktop/CSUMB/Thesis/Data\ analysis/Bioinformatics/DGE_RNAseq_Aug2020/replicates.txt naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full
+
+#run DGE again with reps file
+perl /opt/trinityrnaseq/Analysis/DifferentialExpression/run_DE_analysis.pl --matrix RSEM.isoform.counts.matrix --method edgeR --samples_file replicates.txt
+
+#cd into edgeR folder, then run this 
+#can run with diff p values and diff fold changes (-c 2 is 4 fold change, -c 1 is 2 fold change) 
+perl /opt/trinityrnaseq/Analysis/DifferentialExpression/analyze_diff_expr.pl --matrix /data/corals/QCdata_full/RSEM.isoform.TMM.EXPR.matrix -P 0.001 -C 2 --samples /data/corals/QCdata_full/replicates.txt
+
+#need fast cluster, move edgeR folder to treebeard and run there 
+scp -r naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full/edgeR.22083.dir /home/naug7321/edgeR.22083.dir
+scp naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full/replicates.txt /home/naug7321/
+scp naug7321@khaleesi.csumb.edu:/data/corals/QCdata_full/RSEM.isoform.TMM.EXPR.matrix /home/naug7321/
+
+#now run in edgeR folder in treebeard
+# with p = 0.05
+perl /opt/trinityrnaseq-Trinity-v2.4.0/Analysis/DifferentialExpression/analyze_diff_expr.pl --matrix /home/naug7321/RSEM.isoform.TMM.EXPR.matrix -P 0.05 -C 2 --samples /home/naug7321/replicates.txt
+
+#done!!
+#move edgeR folder back to khaleesi 
+scp -r naug7321@treebeard.csumb.edu:/home/naug7321/edgeR.22083.dir /data/corals/QCdata_full/edgeR.22083.dir_DGE_ALL
+```
+
+
+
+
+
+

@@ -15,16 +15,14 @@
 
 ################################################################
 # First, press command-D on mac or ctrl-shift-H in Rstudio and navigate to the directory containing scripts and input files. Then edit, mark and execute the following bits of code, one after another.
-setwd(dir = "~/Desktop/GitHub/corals_RNAseq_DGE/GO_MWU/")
-
+setwd("~/Desktop/GitHub/RNAseq_DGE/GO_MWU")
 
 # Edit these to match your data file names: 
-input="contigs_signif_file_GOMWU.csv" # two columns of comma-separated values: gene id, continuous measure of significance. To perform standard GO enrichment analysis based on Fisher's exact test, use binary measure (0 or 1, i.e., either sgnificant or not).
-goAnnotations="eggnog_GO_annotations_semicolon_unknowns" # two-column, tab-delimited, one line per gene, multiple GO terms separated by semicolon. If you have multiple lines per gene, use nrify_GOtable.pl prior to running this script.
+input="contigs_signif_file_GOMWU_DEaluheatvcontrol_foldchange.csv" # two columns of comma-separated values: gene id, continuous measure of significance. To perform standard GO enrichment analysis based on Fisher's exact test, use binary measure (0 or 1, i.e., either sgnificant or not).
+goAnnotations="eggnog_GO_annotations_semicolon_unknowns_nospace" # two-column, tab-delimited, one line per gene, multiple GO terms separated by semicolon. If you have multiple lines per gene, use nrify_GOtable.pl prior to running this script.
 goDatabase="go.obo" # download from http://www.geneontology.org/GO.downloads.ontology.shtml
 goDivision="CC" # either MF, or BP, or CC
 source("gomwu.functions.R")
-
 
 # ------------- Calculating stats
 # It might take a few minutes for MF and BP. Do not rerun it if you just want to replot the data with different cutoffs, go straight to gomwuPlot. If you change any of the numeric values below, delete the files that were generated in previos runs first.
@@ -33,7 +31,7 @@ gomwuStats(input, goDatabase, goAnnotations, goDivision,
 	perlPath="perl", # replace with full path to perl executable if it is not in your system's PATH already
 	largest=0.1,  # a GO category will not be considered if it contains more than this fraction of the total number of genes
 	#originally largest = 0.1
-	smallest=5,   # a GO category should contain at least this many genes to be considered, 
+	smallest=10,   # a GO category should contain at least this many genes to be considered, 
 	#originally smallest = 5
 	clusterCutHeight=0.25, # threshold for merging similar (gene-sharing) terms. See README for details.
   #originally clustercutheight = 0.25 
@@ -50,12 +48,12 @@ quartz()
 results=gomwuPlot(input,goAnnotations,goDivision,
 	absValue=-log(0.05,10),  # genes with the measure value exceeding this will be counted as "good genes". This setting is for signed log-pvalues. Specify absValue=0.001 if you are doing Fisher's exact test for standard GO enrichment or analyzing a WGCNA module (all non-zero genes = "good genes").
 #	absValue=1, # un-remark this if you are using log2-fold changes
-	level1=0.1, # FDR threshold for plotting. Specify level1=1 to plot all GO categories containing genes exceeding the absValue.
-	level2=0.05, # FDR cutoff to print in regular (not italic) font.
-	level3=0.01, # FDR cutoff to print in large bold font.
-	txtsize=1.2,    # decrease to fit more on one page, or increase (after rescaling the plot so the tree fits the text) for better "word cloud" effect
+	level1=0.001, # FDR threshold for plotting. Specify level1=1 to plot all GO categories containing genes exceeding the absValue.
+	level2=0.0001, # FDR cutoff to print in regular (not italic) font.
+	level3=0.00001, # FDR cutoff to print in large bold font.
+	txtsize=0.8,    # decrease to fit more on one page, or increase (after rescaling the plot so the tree fits the text) for better "word cloud" effect
 	treeHeight=0.5, # height of the hierarchical clustering tree
-#	colors=c("dodgerblue2","firebrick1","skyblue2","lightcoral") # these are default colors, un-remar and change if needed
+	colors=c("dodgerblue2","firebrick1","skyblue2","lightcoral") # these are default colors, un-remar and change if needed
 )
 # manually rescale the plot so the tree matches the text 
 # if there are too many categories displayed, try make it more stringent with level1=0.05,level2=0.01,level3=0.001.  
@@ -70,7 +68,7 @@ results[[1]]
 
 pcut=1e-2 # adjusted pvalue cutoff for representative GO
 hcut=0.95 # heght at which cut the GO ters tree to get "independent groups". Unremark the following two lines to plot this
-#plot(results[[2]])
+plot(results[[2]])
 #abline(h=hcut,col="red")
 
 ct=cutree(results[[2]],h=0.9)
