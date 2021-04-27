@@ -1,4 +1,5 @@
-# DGE pipeline for coral RNAseq data 2020
+# DGE pipeline for coral RNAseq data 2020 using Palumbi CSV reference
+
 
 # Step 1: Trim Data
 
